@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seguridad Bogotá · Dashboard de Hurtos y Línea 123</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --ink:#10202e; --ink-2:#1c3447; --paper:#f4f1ea; --paper-2:#fbf9f4;
+  --line:#dcd5c7; --muted:#6a7681; --amber:#d97a2b; --amber-soft:#f0b06a;
+  --teal:#2f7d76; --teal-soft:#7fb5ae; --red:#b23a3a; --white:#fff;
+  --r:14px; --shadow:0 1px 2px rgba(16,32,46,.06),0 8px 24px rgba(16,32,46,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Public Sans',system-ui,sans-serif;background:var(--paper);
+  color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+.app{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+
+/* ---------- SIDEBAR ---------- */
+.side{
+  background:var(--ink);color:#cdd8e1;padding:26px 20px;position:sticky;top:0;
+  height:100vh;display:flex;flex-direction:column;gap:6px;
+}
+.brand{display:flex;gap:11px;align-items:flex-start;margin-bottom:26px}
+.brand .dot{width:34px;height:34px;border-radius:9px;flex:0 0 34px;
+  background:linear-gradient(145deg,var(--amber),var(--red));
+  display:grid;place-items:center;color:#fff;font-weight:700;font-family:'Fraunces';font-size:18px}
+.brand h1{font-family:'Fraunces';font-weight:600;font-size:16px;color:#fff;line-height:1.2}
+.brand span{font-size:11px;color:#8295a4;letter-spacing:.04em}
+.nav-label{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#62788a;margin:14px 8px 4px}
+.nav a{
+  display:flex;gap:11px;align-items:center;padding:10px 12px;border-radius:10px;
+  color:#aebcc8;text-decoration:none;font-size:13.5px;font-weight:500;
+  transition:.18s;cursor:pointer;border:1px solid transparent;
+}
+.nav a .num{font-family:'Fraunces';font-size:13px;color:#6a8093;width:16px}
+.nav a:hover{background:#1a2e3f;color:#fff}
+.nav a.active{background:linear-gradient(90deg,rgba(217,122,43,.18),rgba(217,122,43,.04));
+  color:#fff;border-color:rgba(217,122,43,.35)}
+.nav a.active .num{color:var(--amber-soft)}
+.side-foot{margin-top:auto;font-size:11px;color:#5a6f80;line-height:1.5;border-top:1px solid #22384a;padding-top:14px}
+
+/* ---------- MAIN ---------- */
+.main{padding:0;overflow-x:hidden}
+.topbar{
+  padding:22px 38px 18px;border-bottom:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  background:var(--paper-2);position:sticky;top:0;z-index:30}
+.topbar .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:4px}
+.topbar h2{font-family:'Fraunces';font-weight:600;font-size:25px;line-height:1.1;letter-spacing:-.01em}
+.topbar p{color:var(--muted);font-size:13px;margin-top:5px;max-width:560px}
+
+/* ---------- FILTERS ---------- */
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter{display:flex;flex-direction:column;gap:3px}
+.filter label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding-left:2px}
+.filter select{
+  appearance:none;background:var(--white);border:1px solid var(--line);border-radius:9px;
+  padding:8px 30px 8px 12px;font-family:inherit;font-size:13px;color:var(--ink);font-weight:500;
+  cursor:pointer;min-width:122px;
+  background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236a7681' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;transition:.15s}
+.filter select:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px rgba(217,122,43,.13)}
+.btn-reset{align-self:flex-end;background:var(--ink);color:#fff;border:none;border-radius:9px;
+  padding:8px 14px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s}
+.btn-reset:hover{background:var(--ink-2)}
+
+/* ---------- SCREENS ---------- */
+.screen{display:none;padding:26px 38px 50px;animation:fade .4s ease}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* KPI cards */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:22px}
+.kpi{background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--amber)}
+.kpi.teal::before{background:var(--teal)}
+.kpi.ink::before{background:var(--ink)}
+.kpi .k-val{font-family:'Fraunces';font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1}
+.kpi .k-lab{font-size:12px;color:var(--muted);margin-top:7px;font-weight:500}
+.kpi .k-sub{font-size:11px;color:var(--amber);font-weight:600;margin-top:3px}
+
+/* grid + cards */
+.grid{display:grid;gap:16px}
+.g-2{grid-template-columns:repeat(2,1fr)}
+.g-3{grid-template-columns:repeat(3,1fr)}
+.g-23{grid-template-columns:2fr 1fr}
+.g-32{grid-template-columns:1fr 1fr}
+.card{background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+.card h3{font-family:'Fraunces';font-size:16px;font-weight:600;margin-bottom:2px}
+.card .c-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.chart-wrap{position:relative;height:280px}
+.chart-wrap.tall{height:340px}
+.chart-wrap.short{height:220px}
+.span-2{grid-column:span 2}
+
+/* heatmap */
+.heat{width:100%;border-collapse:collapse;font-size:12px}
+.heat th{font-weight:600;color:var(--muted);font-size:10.5px;padding:4px;text-align:center}
+.heat td.lab{font-weight:600;color:var(--ink-2);text-align:left;padding-right:10px;width:36px}
+.heat td.cell{border-radius:6px;text-align:center;color:#fff;font-weight:600;height:34px;font-size:11px}
+
+/* table */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:2px solid var(--line)}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .rank{font-family:'Fraunces';color:var(--amber);font-weight:600;width:24px}
+.bar-cell{position:relative}
+.bar-cell .bar{position:absolute;left:0;top:50%;transform:translateY(-50%);height:22px;background:rgba(47,125,118,.14);border-radius:5px;z-index:0}
+.bar-cell span{position:relative;z-index:1;font-weight:600}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(217,122,43,.12);color:var(--amber)}
+
+/* insight strip */
+.insight{background:linear-gradient(100deg,var(--ink),var(--ink-2));color:#dce6ee;border-radius:var(--r);
+  padding:18px 22px;display:flex;gap:14px;align-items:flex-start;margin-bottom:20px;box-shadow:var(--shadow)}
+.insight .ic{font-size:20px;flex:0 0 auto;margin-top:-2px}
+.insight b{color:var(--amber-soft);font-weight:600}
+.insight p{font-size:13.5px;line-height:1.55}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.note{font-size:11.5px;color:var(--muted);font-style:italic;margin-top:10px}
+
+@media(max-width:980px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px}
+  .brand{margin-bottom:0;margin-right:auto}.nav-label{display:none}.side-foot{display:none}
+  .nav{display:flex;flex-wrap:wrap;gap:5px}.nav a{padding:7px 11px}
+  .g-2,.g-3,.g-23,.g-32{grid-template-columns:1fr}.span-2{grid-column:auto}
+  .screen{padding:22px 18px 40px}.topbar{padding:18px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="brand">
+      <div class="dot">B</div>
+      <div><h1>Seguridad Bogotá</h1><span>Hurtos · Línea 123</span></div>
+    </div>
+    <div class="nav-label">Objetivos de análisis</div>
+    <nav class="nav" id="nav">
+      <a data-s="o1" class="active"><span class="num">01</span> Prioridad por zonas</a>
+      <a data-s="o2"><span class="num">02</span> Ritmos y franjas</a>
+      <a data-s="o3"><span class="num">03</span> Tendencia temporal</a>
+      <a data-s="o4"><span class="num">04</span> Intervenciones</a>
+      <a data-s="o5"><span class="num">05</span> Demanda vs. hurto</a>
+    </nav>
+    <div class="side-foot">
+      Visualización de Datos · 2026<br>
+      Fuentes: Hurtos SIEDCO, NUSE Línea 123, UPZ–DAI Bogotá.
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow" id="eyebrow">Objetivo 01</div>
+        <h2 id="title">Prioridad de zonas por UPZ</h2>
+        <p id="subtitle"></p>
+      </div>
+      <div class="filters" id="filters"></div>
+    </header>
+
+    <!-- screens injected/managed by JS -->
+    <section class="screen active" id="o1"></section>
+    <section class="screen" id="o2"></section>
+    <section class="screen" id="o3"></section>
+    <section class="screen" id="o4"></section>
+    <section class="screen" id="o5"></section>
+  </main>
+</div>
+
+<script>
+const DASH = {"meta":{"hurtos_total":100017,"llamadas_total":30431,"llamadas_2025":2407,"n_upz":109,"n_localidades":20,"periodo_hurtos":"Ene–Sep 2025","periodo_llamadas":"2020–2025"},"serie_mes":[{"mes":"Ene","hurtos":9690,"llamadas":311},{"mes":"Feb","hurtos":11224,"llamadas":284},{"mes":"Mar","hurtos":11581,"llamadas":275},{"mes":"Abr","hurtos":11580,"llamadas":250},{"mes":"May","hurtos":9671,"llamadas":272},{"mes":"Jun","hurtos":10641,"llamadas":226},{"mes":"Jul","hurtos":11682,"llamadas":263},{"mes":"Ago","hurtos":11694,"llamadas":244},{"mes":"Sep","hurtos":12254,"llamadas":273},{"mes":"Oct","hurtos":0,"llamadas":9},{"mes":"Nov","hurtos":0,"llamadas":0},{"mes":"Dic","hurtos":0,"llamadas":0}],"serie_anual":[{"anio":"2020","llamadas":5568},{"anio":"2021","llamadas":8546},{"anio":"2022","llamadas":6017},{"anio":"2023","llamadas":4054},{"anio":"2024","llamadas":3839},{"anio":"2025","llamadas":2407}],"scatter":[{"mes":"Ene","x":311,"y":9690},{"mes":"Feb","x":284,"y":11224},{"mes":"Mar","x":275,"y":11581},{"mes":"Abr","x":250,"y":11580},{"mes":"May","x":272,"y":9671},{"mes":"Jun","x":226,"y":10641},{"mes":"Jul","x":263,"y":11682},{"mes":"Ago","x":244,"y":11694},{"mes":"Sep","x":273,"y":12254},{"mes":"Oct","x":9,"y":0}],"heat":{"franjas":["00:00","03:00","06:00","09:00","12:00","15:00","18:00","21:00"],"filas":[{"dia":"Lun","valores":[5,2,13,75,93,93,65,32]},{"dia":"Mar","valores":[7,0,17,79,93,84,57,28]},{"dia":"Mié","valores":[7,1,30,69,92,76,67,34]},{"dia":"Jue","valores":[1,2,21,74,96,94,65,32]},{"dia":"Vie","valores":[4,2,13,83,90,75,55,29]},{"dia":"Sáb","valores":[9,3,18,62,76,68,53,22]},{"dia":"Dom","valores":[4,4,18,46,63,44,38,24]}]},"top_upz":[{"cod":"UPZ28","nombre":"El Rincon","llamadas":66,"poblacion":136742,"tasa":48.3},{"cod":"UPZ71","nombre":"Tibabuyes","llamadas":60,"poblacion":136742,"tasa":43.9},{"cod":"UPZ85","nombre":"Bosa Central","llamadas":59,"poblacion":136742,"tasa":43.1},{"cod":"UPZ73","nombre":"Garces Navas","llamadas":57,"poblacion":136742,"tasa":41.7},{"cod":"UPZ19","nombre":"El Prado","llamadas":56,"poblacion":136742,"tasa":41.0},{"cod":"UPZ13","nombre":"Los Cedros","llamadas":54,"poblacion":136742,"tasa":39.5},{"cod":"UPZ46","nombre":"Castilla","llamadas":48,"poblacion":136742,"tasa":35.1},{"cod":"UPZ30","nombre":"Boyaca Real","llamadas":47,"poblacion":136742,"tasa":34.4},{"cod":"UPZ27","nombre":"Suba","llamadas":47,"poblacion":136742,"tasa":34.4},{"cod":"UPZ69","nombre":"Ismael Perdomo","llamadas":42,"poblacion":136742,"tasa":30.7},{"cod":"UPZ26","nombre":"Las Ferias","llamadas":42,"poblacion":136742,"tasa":30.7},{"cod":"UPZ84","nombre":"Bosa Occidental","llamadas":41,"poblacion":136742,"tasa":30.0},{"cod":"UPZ45","nombre":"Carvajal","llamadas":40,"poblacion":136742,"tasa":29.3},{"cod":"UPZ75","nombre":"Fontibon","llamadas":39,"poblacion":136742,"tasa":28.5},{"cod":"UPZ79","nombre":"Calandaima","llamadas":39,"poblacion":136742,"tasa":28.5}],"hur_arma":[{"k":"Sin Empleo De Armas","v":67181},{"k":"Arma Blanca / Cortopunzante","v":17876},{"k":"Arma De Fuego","v":8235},{"k":"No Reportado","v":4835},{"k":"Contundentes","v":1411},{"k":"Escopolamina","v":479}],"hur_genero":[{"k":"Masculino","v":55689},{"k":"Femenino","v":44295},{"k":"No informado","v":33}],"hur_edad":[{"k":"Adultos","v":98452},{"k":"Adolescentes","v":1287},{"k":"Menores","v":275},{"k":"No informado","v":3}],"hur_dow":[{"dia":"Lun","valor":12389},{"dia":"Mar","valor":14086},{"dia":"Mié","valor":14636},{"dia":"Jue","valor":14757},{"dia":"Vie","valor":16584},{"dia":"Sáb","valor":16077},{"dia":"Dom","valor":11488}],"lla_loc":[{"k":"Suba","v":371},{"k":"Kennedy","v":287},{"k":"Engativá","v":277},{"k":"Usaquén","v":221},{"k":"Bosa","v":174},{"k":"Ciudad Bolívar","v":155},{"k":"Fontibón","v":147},{"k":"San Cristóbal","v":94},{"k":"Chapinero","v":91},{"k":"Rafael Uribe Uribe","v":87},{"k":"Puente Aranda","v":82},{"k":"Teusaquillo","v":82}],"lla_franja":[{"k":"00:00","v":37},{"k":"03:00","v":14},{"k":"06:00","v":130},{"k":"09:00","v":488},{"k":"12:00","v":603},{"k":"15:00","v":534},{"k":"18:00","v":400},{"k":"21:00","v":201}]};
+</script>
+<script>
+/* ===================== Seguridad Bogotá · Dashboard ===================== */
+const C = {
+  ink:'#10202e', amber:'#d97a2b', amberS:'#f0b06a', teal:'#2f7d76',
+  tealS:'#7fb5ae', red:'#b23a3a', muted:'#6a7681', line:'#dcd5c7', paper:'#fbf9f4'
+};
+const fmt = n => n.toLocaleString('es-CO');
+const charts = {};
+
+Chart.defaults.font.family = "'Public Sans', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = C.muted;
+Chart.defaults.plugins.legend.display = false;
+Chart.defaults.animation.duration = 700;
+Chart.defaults.maintainAspectRatio = false;
+
+const gridX = {grid:{display:false},ticks:{color:C.muted}};
+const gridY = {grid:{color:'rgba(0,0,0,.06)',drawBorder:false},ticks:{color:C.muted},border:{display:false}};
+const tip = {
+  backgroundColor:C.ink,padding:11,cornerRadius:8,titleFont:{size:12.5,weight:'600'},
+  bodyFont:{size:12.5},displayColors:true,boxPadding:4
+};
+
+/* ---------- metadata per screen ---------- */
+const META = {
+  o1:{eb:'Objetivo 01',t:'Prioridad de zonas por UPZ',
+      s:'Dónde se concentra la demanda ciudadana ante emergencias y cómo se compara con el comportamiento del hurto urbano, para orientar la asignación de recursos.'},
+  o2:{eb:'Objetivo 02',t:'Ritmos semanales y franjas horarias',
+      s:'Distribución de incidentes por día de la semana y franja horaria: identifica los momentos en que conviene reforzar vigilancia y patrullaje.'},
+  o3:{eb:'Objetivo 03',t:'Tendencia temporal',
+      s:'Evolución de la incidencia del hurto y de la demanda a la línea de emergencias para detectar estacionalidad y puntos de cambio.'},
+  o4:{eb:'Objetivo 04',t:'Evaluación de intervenciones',
+      s:'Comparación de los indicadores antes y después de una intervención de seguridad (simulada) para estimar su impacto.'},
+  o5:{eb:'Objetivo 05',t:'Relación demanda ciudadana y registro de hurto',
+      s:'Exploración de la relación entre la demanda a la línea 123 y el hurto registrado, e identificación de las zonas donde es más evidente.'},
+};
+
+/* ---------- filter definitions per screen ---------- */
+const FILTERS = {
+  o1:[{id:'metrica',lab:'Métrica',opts:['Llamadas (total)','Tasa por 100k hab.']}],
+  o2:[{id:'rango',lab:'Rango del día',opts:['Todos','Madrugada','Mañana','Tarde','Noche']}],
+  o3:[{id:'serie',lab:'Serie',opts:['Ambas','Solo hurtos','Solo llamadas']},
+      {id:'gran',lab:'Granularidad',opts:['Mensual 2025','Anual 2020–25']}],
+  o4:[{id:'fecha',lab:'Fecha intervención',opts:['Jun 2025','May 2025','Jul 2025']},
+      {id:'ind',lab:'Indicador',opts:['Hurtos','Llamadas 123']}],
+  o5:[{id:'dim',lab:'Desglose',opts:['Por mes','Por arma/medio','Por localidad']}],
+};
+const STATE = {}; // current filter values
+
+/* helper builders ---------------------------------------------------- */
+function el(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstChild;}
+function kpi(val,lab,sub,cls=''){return `<div class="kpi ${cls}"><div class="k-val">${val}</div><div class="k-lab">${lab}</div>${sub?`<div class="k-sub">${sub}</div>`:''}</div>`;}
+function destroy(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+/* gradient util */
+function grad(ctx,c1,c2){const g=ctx.createLinearGradient(0,0,0,300);g.addColorStop(0,c1);g.addColorStop(1,c2);return g;}
+
+/* ===================== SCREEN 1 — Prioridad por zonas ===================== */
+function buildO1(){
+  const m=DASH.meta;
+  document.getElementById('o1').innerHTML=`
+    <div class="kpis">
+      ${kpi(fmt(m.llamadas_2025),'Llamadas 123 · 2025','registradas con UPZ válida')}
+      ${kpi(m.n_upz,'UPZ con demanda','de 116 unidades de planeamiento','teal')}
+      ${kpi(fmt(DASH.top_upz[0].llamadas),'Pico — '+DASH.top_upz[0].nombre,'UPZ con más llamadas','ink')}
+      ${kpi(fmt(m.hurtos_total),'Hurtos a personas','acumulado '+m.periodo_hurtos)}
+    </div>
+    <div class="grid g-23">
+      <div class="card">
+        <h3>Top 12 UPZ por demanda ciudadana</h3>
+        <div class="c-sub">Llamadas a la línea 123 en 2025 · ordenadas de mayor a menor</div>
+        <div class="chart-wrap tall"><canvas id="c-o1-bar"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Ranking detallado</h3>
+        <div class="c-sub">Llamadas y tasa por 100k habitantes (proxy)</div>
+        <table class="tbl" id="o1-tbl"></table>
+        <div class="note">La tasa usa la población proxy de cada UPZ; el hurto solo está disponible a nivel municipio, sin desagregación territorial.</div>
+      </div>
+    </div>`;
+  renderO1();
+}
+function renderO1(){
+  const byTasa = STATE.o1?.metrica === 'Tasa por 100k hab.';
+  let rows=[...DASH.top_upz];
+  if(byTasa) rows=rows.filter(r=>r.tasa!=null).sort((a,b)=>b.tasa-a.tasa);
+  const top=rows.slice(0,12);
+  destroy('c-o1-bar');
+  const cv=document.getElementById('c-o1-bar');
+  charts['c-o1-bar']=new Chart(cv,{type:'bar',data:{
+    labels:top.map(r=>r.nombre),
+    datasets:[{data:top.map(r=>byTasa?r.tasa:r.llamadas),
+      backgroundColor:grad(cv.getContext('2d'),C.amber,C.amberS),
+      borderRadius:6,barThickness:16}]},
+    options:{indexAxis:'y',plugins:{tooltip:{...tip,callbacks:{label:c=>byTasa?`${c.raw} / 100k`:`${fmt(c.raw)} llamadas`}}},
+      scales:{x:{...gridY},y:{...gridX,ticks:{color:C.ink,font:{size:11.5}}}}}});
+  // table
+  const t=document.getElementById('o1-tbl');
+  const max=Math.max(...DASH.top_upz.map(r=>r.llamadas));
+  t.innerHTML=`<thead><tr><th>#</th><th>UPZ</th><th>Llam.</th><th>Tasa</th></tr></thead><tbody>`+
+    DASH.top_upz.slice(0,10).map((r,i)=>`<tr>
+      <td class="rank">${i+1}</td>
+      <td>${r.nombre}</td>
+      <td class="bar-cell"><span class="bar" style="width:${r.llamadas/max*100}%"></span><span>${fmt(r.llamadas)}</span></td>
+      <td>${r.tasa!=null?`<span class="tag">${r.tasa}</span>`:'—'}</td></tr>`).join('')+`</tbody>`;
+}
+
+/* ===================== SCREEN 2 — Ritmos y franjas ===================== */
+function buildO2(){
+  // peak cell
+  let peak={v:-1};
+  DASH.heat.filas.forEach(f=>f.valores.forEach((v,i)=>{if(v>peak.v)peak={v,dia:f.dia,fr:DASH.heat.franjas[i]};}));
+  const totFranja=DASH.lla_franja.reduce((a,b)=>a+b.v,0);
+  const topFr=[...DASH.lla_franja].sort((a,b)=>b.v-a.v)[0];
+  document.getElementById('o2').innerHTML=`
+    <div class="kpis">
+      ${kpi(peak.dia+' · '+peak.fr,'Pico semanal','franja con más incidentes')}
+      ${kpi(topFr.k+'h','Franja más crítica','horario de mayor demanda','teal')}
+      ${kpi(fmt(totFranja),'Incidentes 2025','distribuidos por franja','ink')}
+    </div>
+    <div class="insight"><span class="ic">◳</span><p>El mapa de calor cruza <b>día de la semana</b> con <b>franja horaria</b>. Las celdas más intensas marcan las ventanas donde concentrar patrullaje y disponibilidad de la línea 123.</p></div>
+    <div class="grid g-23">
+      <div class="card">
+        <h3>Mapa de calor · día × franja horaria</h3>
+        <div class="c-sub">Intensidad de llamadas a la línea 123 — 2025</div>
+        <div id="o2-heat"></div>
+      </div>
+      <div class="card">
+        <h3>Incidentes por franja</h3>
+        <div class="c-sub">Suma del día completo</div>
+        <div class="chart-wrap tall"><canvas id="c-o2-fr"></canvas></div>
+      </div>
+    </div>`;
+  renderO2();
+}
+function renderO2(){
+  const f=DASH.heat;
+  // max for color scale
+  let all=[];f.filas.forEach(r=>all.push(...r.valores));
+  const max=Math.max(...all)||1;
+  const color=v=>{
+    if(v===0)return '#eef0ec';
+    const t=v/max;                     // 0..1 intensidad
+    // rampa teal (bajo) -> ámbar (alto)
+    return t<0.5 ? `rgba(47,125,118,${(0.25+t).toFixed(3)})`
+                 : `rgba(217,122,43,${(0.20+t*0.80).toFixed(3)})`;};
+  let html=`<table class="heat"><thead><tr><th></th>${f.franjas.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+  f.filas.forEach(row=>{
+    html+=`<tr><td class="lab">${row.dia}</td>`+
+      row.valores.map(v=>`<td class="cell" style="background:${color(v)};color:${v/max>0.45?'#fff':'#33424d'}">${v||''}</td>`).join('')+`</tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('o2-heat').innerHTML=html;
+  // franja bar
+  destroy('c-o2-fr');
+  const cv=document.getElementById('c-o2-fr');
+  charts['c-o2-fr']=new Chart(cv,{type:'bar',data:{
+    labels:DASH.lla_franja.map(x=>x.k+'h'),
+    datasets:[{data:DASH.lla_franja.map(x=>x.v),backgroundColor:C.teal,borderRadius:6,barThickness:18}]},
+    options:{indexAxis:'y',plugins:{tooltip:{...tip,callbacks:{label:c=>`${fmt(c.raw)} incidentes`}}},
+      scales:{x:gridY,y:{...gridX,ticks:{color:C.ink,font:{size:11}}}}}});
+}
+
+/* ===================== SCREEN 3 — Tendencia temporal ===================== */
+function buildO3(){
+  const a=DASH.serie_anual;
+  const peak=[...a].sort((x,y)=>y.llamadas-x.llamadas)[0];
+  const last=a[a.length-1], first=a[0];
+  const chg=Math.round((last.llamadas-peak.llamadas)/peak.llamadas*100);
+  document.getElementById('o3').innerHTML=`
+    <div class="kpis">
+      ${kpi(peak.anio,'Año pico de llamadas','máxima demanda 123','teal')}
+      ${kpi(chg+'%','Cambio desde el pico','llamadas '+peak.anio+'→'+last.anio)}
+      ${kpi(fmt(DASH.serie_mes.reduce((s,m)=>s+m.hurtos,0)),'Hurtos '+DASH.meta.periodo_hurtos,'tendencia mensual','ink')}
+    </div>
+    <div class="card span-2">
+      <h3 id="o3-h">Evolución temporal</h3>
+      <div class="c-sub" id="o3-sub"></div>
+      <div class="chart-wrap tall"><canvas id="c-o3"></canvas></div>
+      <div class="legend" id="o3-leg"></div>
+      <div class="note">El registro de hurtos cubre Ene–Sep 2025; las llamadas 123 abarcan 2020–2025. Las series usan ejes independientes por su diferente magnitud.</div>
+    </div>`;
+  renderO3();
+}
+function renderO3(){
+  const st=STATE.o3||{};
+  const anual = st.gran==='Anual 2020–25';
+  const serie = st.serie||'Ambas';
+  destroy('c-o3');
+  const cv=document.getElementById('c-o3');const ctx=cv.getContext('2d');
+  let labels,ds=[];
+  if(anual){
+    labels=DASH.serie_anual.map(x=>x.anio);
+    ds=[{label:'Llamadas 123',data:DASH.serie_anual.map(x=>x.llamadas),
+      borderColor:C.teal,backgroundColor:grad(ctx,'rgba(47,125,118,.28)','rgba(47,125,118,0)'),
+      fill:true,tension:.35,borderWidth:2.5,pointRadius:4,pointBackgroundColor:C.teal,yAxisID:'y'}];
+    document.getElementById('o3-h').textContent='Demanda anual a la línea 123';
+    document.getElementById('o3-sub').textContent='Total de incidentes por año · 2020–2025';
+    document.getElementById('o3-leg').innerHTML=`<span><i style="background:${C.teal}"></i>Llamadas 123</span>`;
+  } else {
+    labels=DASH.serie_mes.map(x=>x.mes);
+    if(serie!=='Solo llamadas') ds.push({label:'Hurtos',data:DASH.serie_mes.map(x=>x.hurtos),
+      borderColor:C.amber,backgroundColor:grad(ctx,'rgba(217,122,43,.25)','rgba(217,122,43,0)'),
+      fill:true,tension:.35,borderWidth:2.5,pointRadius:3,pointBackgroundColor:C.amber,yAxisID:'y'});
+    if(serie!=='Solo hurtos') ds.push({label:'Llamadas 123',data:DASH.serie_mes.map(x=>x.llamadas),
+      borderColor:C.teal,backgroundColor:'rgba(0,0,0,0)',borderDash:[5,4],
+      tension:.35,borderWidth:2.5,pointRadius:3,pointBackgroundColor:C.teal,yAxisID:'y1'});
+    document.getElementById('o3-h').textContent='Hurtos vs. llamadas 123 · 2025';
+    document.getElementById('o3-sub').textContent='Serie mensual comparada (ejes independientes)';
+    document.getElementById('o3-leg').innerHTML=
+      (serie!=='Solo llamadas'?`<span><i style="background:${C.amber}"></i>Hurtos (eje izq.)</span>`:'')+
+      (serie!=='Solo hurtos'?`<span><i style="background:${C.teal}"></i>Llamadas 123 (eje der.)</span>`:'');
+  }
+  charts['c-o3']=new Chart(cv,{type:'line',data:{labels,datasets:ds},
+    options:{interaction:{mode:'index',intersect:false},plugins:{tooltip:tip},
+      scales:{x:gridX,
+        y:{...gridY,position:'left',ticks:{...gridY.ticks,callback:v=>fmt(v)}},
+        y1:{...gridY,position:'right',grid:{drawOnChartArea:false},display:!anual&&serie==='Ambas',ticks:{color:C.teal,callback:v=>fmt(v)}}}}});
+}
+
+/* ===================== SCREEN 4 — Intervenciones ===================== */
+function buildO4(){
+  document.getElementById('o4').innerHTML=`
+    <div class="insight"><span class="ic">⚑</span><p>Se simula una <b>intervención de seguridad</b> en una fecha de corte y se comparan los indicadores en las semanas <b>previas</b> y <b>posteriores</b>. Permite estimar el efecto antes de desplegar recursos reales.</p></div>
+    <div class="kpis" id="o4-kpi"></div>
+    <div class="grid g-32">
+      <div class="card">
+        <h3>Antes vs. después de la intervención</h3>
+        <div class="c-sub" id="o4-sub"></div>
+        <div class="chart-wrap"><canvas id="c-o4-ba"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Promedio mensual del indicador</h3>
+        <div class="c-sub">Meses previos vs. posteriores a la fecha de corte</div>
+        <div class="chart-wrap"><canvas id="c-o4-line"></canvas></div>
+      </div>
+    </div>
+    <div class="card span-2" style="margin-top:16px">
+      <div class="note">Demostración metodológica: con datos a nivel municipio, el corte usa el promedio mensual de la serie 2025 como línea base. En un despliegue real se filtraría por la UPZ intervenida y la fecha exacta de la intervención (tabla <i>intervencion</i> del modelo).</div>
+    </div>`;
+  renderO4();
+}
+function renderO4(){
+  const st=STATE.o4||{};
+  const ind = st.ind==='Llamadas 123' ? 'llamadas':'hurtos';
+  const fecha = st.fecha||'Jun 2025';
+  const cutMonth = {'May 2025':5,'Jun 2025':6,'Jul 2025':7}[fecha];
+  const serie=DASH.serie_mes.slice(0,9); // ene-sep
+  const before=serie.filter((_,i)=>i<cutMonth-1);
+  const after=serie.filter((_,i)=>i>=cutMonth-1);
+  const avg=arr=>arr.length?Math.round(arr.reduce((s,m)=>s+m[ind],0)/arr.length):0;
+  const bAvg=avg(before),aAvg=avg(after);
+  const delta=bAvg?Math.round((aAvg-bAvg)/bAvg*100):0;
+  const col = ind==='hurtos'?C.amber:C.teal;
+  document.getElementById('o4-sub').textContent=`Indicador: ${ind==='hurtos'?'hurtos a personas':'llamadas 123'} · corte en ${fecha}`;
+  document.getElementById('o4-kpi').innerHTML=
+    kpi(fmt(bAvg),'Promedio mensual ANTES','meses previos al corte')+
+    kpi(fmt(aAvg),'Promedio mensual DESPUÉS','meses posteriores','teal')+
+    kpi((delta>0?'+':'')+delta+'%','Variación','tras la intervención',delta<=0?'teal':'ink');
+  // before/after bar
+  destroy('c-o4-ba');
+  charts['c-o4-ba']=new Chart(document.getElementById('c-o4-ba'),{type:'bar',data:{
+    labels:['Antes','Después'],datasets:[{data:[bAvg,aAvg],
+      backgroundColor:[C.muted,col],borderRadius:8,barThickness:64}]},
+    options:{plugins:{tooltip:{...tip,callbacks:{label:c=>fmt(c.raw)+' / mes'}}},
+      scales:{x:gridX,y:{...gridY,ticks:{...gridY.ticks,callback:v=>fmt(v)}}}}});
+  // monthly line w/ cut marker
+  destroy('c-o4-line');
+  charts['c-o4-line']=new Chart(document.getElementById('c-o4-line'),{type:'line',data:{
+    labels:serie.map(m=>m.mes),datasets:[
+      {label:'Antes',data:serie.map((m,i)=>i<cutMonth-1?m[ind]:null),borderColor:C.muted,
+        backgroundColor:'rgba(0,0,0,0)',tension:.3,borderWidth:2.5,pointRadius:3,spanGaps:false},
+      {label:'Después',data:serie.map((m,i)=>i>=cutMonth-2?m[ind]:null),borderColor:col,
+        backgroundColor:'rgba(0,0,0,0)',tension:.3,borderWidth:2.5,pointRadius:3,spanGaps:false}
+    ]},
+    options:{plugins:{tooltip:tip},scales:{x:gridX,y:{...gridY,ticks:{...gridY.ticks,callback:v=>fmt(v)}}}}});
+}
+
+/* ===================== SCREEN 5 — Demanda vs hurto ===================== */
+function buildO5(){
+  document.getElementById('o5').innerHTML=`
+    <div class="kpis" id="o5-kpi"></div>
+    <div class="grid g-23">
+      <div class="card">
+        <h3 id="o5-h">Relación demanda 123 ↔ hurto</h3>
+        <div class="c-sub" id="o5-sub"></div>
+        <div class="chart-wrap tall"><canvas id="c-o5-main"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Composición del hurto</h3>
+        <div class="c-sub">Por género y grupo de edad de la víctima</div>
+        <div class="chart-wrap short"><canvas id="c-o5-don"></canvas></div>
+        <div class="legend" id="o5-leg"></div>
+      </div>
+    </div>`;
+  renderO5();
+}
+function renderO5(){
+  const st=STATE.o5||{};const dim=st.dim||'Por mes';
+  // correlation coefficient on monthly scatter
+  const pts=DASH.scatter;
+  const n=pts.length,sx=pts.reduce((a,p)=>a+p.x,0),sy=pts.reduce((a,p)=>a+p.y,0);
+  const sxy=pts.reduce((a,p)=>a+p.x*p.y,0),sxx=pts.reduce((a,p)=>a+p.x*p.x,0),syy=pts.reduce((a,p)=>a+p.y*p.y,0);
+  const r=((n*sxy-sx*sy)/Math.sqrt((n*sxx-sx*sx)*(n*syy-sy*sy))||0);
+  document.getElementById('o5-kpi').innerHTML=
+    kpi(r.toFixed(2),'Correlación mensual (r)','llamadas 123 vs. hurtos')+
+    kpi(DASH.hur_arma[0].k,'Medio más frecuente','en hurto a personas','teal')+
+    kpi(DASH.lla_loc[0].k,'Localidad con más llamadas','mayor demanda 123','ink');
+
+  destroy('c-o5-main');
+  const cv=document.getElementById('c-o5-main');const ctx=cv.getContext('2d');
+  if(dim==='Por mes'){
+    document.getElementById('o5-h').textContent='Dispersión mensual: llamadas vs. hurtos';
+    document.getElementById('o5-sub').textContent='Cada punto es un mes de 2025';
+    charts['c-o5-main']=new Chart(cv,{type:'scatter',data:{datasets:[{
+      data:pts.map(p=>({x:p.x,y:p.y,mes:p.mes})),backgroundColor:C.amber,
+      pointRadius:7,pointHoverRadius:9,borderColor:'#fff',borderWidth:1.5}]},
+      options:{plugins:{tooltip:{...tip,callbacks:{label:c=>`${c.raw.mes}: ${fmt(c.raw.x)} llam · ${fmt(c.raw.y)} hurtos`}}},
+        scales:{x:{...gridY,title:{display:true,text:'Llamadas 123',color:C.muted}},
+          y:{...gridY,title:{display:true,text:'Hurtos',color:C.muted}}}}});
+  } else if(dim==='Por arma/medio'){
+    document.getElementById('o5-h').textContent='Hurto por arma o medio empleado';
+    document.getElementById('o5-sub').textContent='Distribución 2025';
+    charts['c-o5-main']=new Chart(cv,{type:'bar',data:{
+      labels:DASH.hur_arma.map(x=>x.k),datasets:[{data:DASH.hur_arma.map(x=>x.v),
+        backgroundColor:grad(ctx,C.amber,C.amberS),borderRadius:6,barThickness:22}]},
+      options:{indexAxis:'y',plugins:{tooltip:{...tip,callbacks:{label:c=>fmt(c.raw)+' casos'}}},
+        scales:{x:gridY,y:{...gridX,ticks:{color:C.ink,font:{size:11}}}}}});
+  } else {
+    document.getElementById('o5-h').textContent='Demanda 123 por localidad';
+    document.getElementById('o5-sub').textContent='Llamadas en 2025 · top 12';
+    charts['c-o5-main']=new Chart(cv,{type:'bar',data:{
+      labels:DASH.lla_loc.map(x=>x.k),datasets:[{data:DASH.lla_loc.map(x=>x.v),
+        backgroundColor:grad(ctx,C.teal,C.tealS),borderRadius:6,barThickness:18}]},
+      options:{indexAxis:'y',plugins:{tooltip:{...tip,callbacks:{label:c=>fmt(c.raw)+' llamadas'}}},
+        scales:{x:gridY,y:{...gridX,ticks:{color:C.ink,font:{size:11}}}}}});
+  }
+  // donut género
+  destroy('c-o5-don');
+  charts['c-o5-don']=new Chart(document.getElementById('c-o5-don'),{type:'doughnut',data:{
+    labels:DASH.hur_genero.map(x=>x.k),datasets:[{data:DASH.hur_genero.map(x=>x.v),
+      backgroundColor:[C.ink,C.amber,C.tealS],borderColor:C.paper,borderWidth:3}]},
+    options:{cutout:'62%',plugins:{tooltip:{...tip,callbacks:{label:c=>`${c.label}: ${fmt(c.raw)}`}}}}});
+  document.getElementById('o5-leg').innerHTML=DASH.hur_genero.map((g,i)=>
+    `<span><i style="background:${[C.ink,C.amber,C.tealS][i]}"></i>${g.k} · ${fmt(g.v)}</span>`).join('');
+}
+
+/* ===================== FILTERS + NAV ===================== */
+const BUILDERS={o1:buildO1,o2:buildO2,o3:buildO3,o4:buildO4,o5:buildO5};
+const RENDERERS={o1:renderO1,o2:renderO2,o3:renderO3,o4:renderO4,o5:renderO5};
+
+function renderFilters(screen){
+  const wrap=document.getElementById('filters');
+  const defs=FILTERS[screen]||[];
+  STATE[screen]=STATE[screen]||{};
+  wrap.innerHTML=defs.map(f=>{
+    if(!STATE[screen][f.id]) STATE[screen][f.id]=f.opts[0];
+    return `<div class="filter"><label>${f.lab}</label>
+      <select data-f="${f.id}">${f.opts.map(o=>`<option ${o===STATE[screen][f.id]?'selected':''}>${o}</option>`).join('')}</select></div>`;
+  }).join('') + `<button class="btn-reset" id="reset">Reiniciar</button>`;
+  wrap.querySelectorAll('select').forEach(sel=>sel.addEventListener('change',e=>{
+    STATE[screen][e.target.dataset.f]=e.target.value;
+    RENDERERS[screen]();
+  }));
+  document.getElementById('reset').addEventListener('click',()=>{
+    defs.forEach(f=>STATE[screen][f.id]=f.opts[0]);
+    renderFilters(screen);RENDERERS[screen]();
+  });
+}
+
+function go(screen){
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.s===screen));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===screen));
+  const m=META[screen];
+  document.getElementById('eyebrow').textContent=m.eb;
+  document.getElementById('title').textContent=m.t;
+  document.getElementById('subtitle').textContent=m.s;
+  renderFilters(screen);
+  if(!document.getElementById(screen).dataset.built){
+    BUILDERS[screen]();document.getElementById(screen).dataset.built='1';
+  } else { RENDERERS[screen](); }
+  window.scrollTo({top:0});
+}
+
+document.getElementById('nav').addEventListener('click',e=>{
+  const a=e.target.closest('a');if(a)go(a.dataset.s);
+});
+
+/* init */
+go('o1');
+
+</script>
+</body>
+</html>

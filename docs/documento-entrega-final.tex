@@ -1,0 +1,533 @@
+\documentclass[12pt,letterpaper]{article}
+
+\usepackage[spanish, es-nodecimaldot]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amssymb, amsmath}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{float}
+\setlength{\parskip}{0.25em}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{8pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{verbatim}
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\itshape}{\thesubsubsection}{0.5em}{}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+
+\newcommand{\universidad}{Pontificia Universidad Javeriana}
+\newcommand{\facultad}{Facultad de Ingeniería}
+\newcommand{\carrera}{Ingeniería de Sistemas}
+\newcommand{\curso}{Visualización de Datos}
+\newcommand{\proyecto}{Análisis y visualización de delitos en Bogotá}
+\newcommand{\subtitulo}{Entrega Final}
+\newcommand{\profesor}{Laura Gomez}
+\newcommand{\autores}{Luis Gutiérrez \\ Emilio Vargas \\ Santiago Suarez}
+\newcommand{\fechaentrega}{Bogotá, Mayo de 2026}
+\newcommand{\abreviaturaCurso}{Visualización de Datos}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue,
+  citecolor=black,
+  pdfauthor={\autores},
+  pdftitle={\proyecto}
+}
+
+\fancyhead[L]{\small \abreviaturaCurso}
+\fancyhead[R]{\small \universidad}
+\fancyfoot[C]{\thepage}
+
+\sloppy
+
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{0.5cm}
+  \includegraphics[width=5cm]{logo_javeriana.png}\par
+  \vspace{0.5cm}
+  {\Large \universidad \par}
+  {\large \facultad \par}
+  {\large \carrera \par}
+  \vspace{2.0cm}
+  {\Large \textbf{\proyecto}\par}
+  \vspace{0.5cm}
+  {\large \textbf{\subtitulo}\par}
+  \vspace{0.8cm}
+  {\large \textbf{Asignatura:} \curso\par}
+  \vspace{0.8cm}
+  {\large \textbf{Autores:}\par}
+  {\large \autores\par}
+  \vspace{0.8cm}
+  {\large \textbf{Profesor:} \profesor\par}
+  \vfill
+  {\large \fechaentrega\par}
+\end{titlepage}
+
+\setcounter{page}{1}
+\tableofcontents
+\newpage
+
+%==============================================================================
+\section{Introducción}
+%==============================================================================
+
+La seguridad ciudadana es uno de los principales desafíos en ciudades como Bogotá, donde los delitos de alto impacto y los hurtos a personas afectan tanto la calidad de vida como la percepción de seguridad de la población. En este contexto, el análisis y la visualización de datos se convierten en herramientas clave para comprender el comportamiento de la criminalidad y apoyar la toma de decisiones estratégica. Por ello, el presente proyecto busca, integrando información proveniente de registros oficiales, llamadas a la línea 123 y datos geográficamente de las UPZ. A través de herramientas de análisis exploratorio y dashboards interactivos, se pretende identificar patrones temporales y especiales, zonas críticas y tendencias relevantes que faciliten la priorización de recursos y el fortalecimiento de las estrategias de seguridad ciudadana.
+
+%==============================================================================
+\section{Contexto}
+%==============================================================================
+
+\subsection{Sector de seguridad ciudadana}
+
+El proyecto se desarrolla en el sector de seguridad ciudadana, enfocado en el análisis de delitos de alto impacto y hurto a personas en Bogotá. Este sector busca reducir la criminalidad y mejorar la calidad de vida mediante el uso de información y herramientas analíticas que permiten entender mejor el comportamiento del delito. Se trata de situaciones que impactan cómo las personas perciben la seguridad, y son situaciones que demandan acciones operativas permanentes tanto de monitoreo como de reacción. El propósito principal es identificar patrones en el espacio y el tiempo, comprender los aumentos repentinos y las variaciones en los tipos de delito, y convertir ese análisis en una asignación zonal prioritaria. Así, es posible tomar decisiones fundamentadas en información real sobre la manera en que se distribuyen los recursos y los programas gubernamentales orientados a garantizar la seguridad en Bogotá.
+
+\subsection{Organización: OLSC-Bogotá}
+
+Inicialmente se delimita el alcance del análisis en la visualización en las UPZ como unidad base. Los conjuntos de datos seleccionados permiten principalmente calcular tasas por cada 100 mil habitantes (cuando se dispone de población), densidad por kilómetro cuadrado, identificar tendencias, variaciones por día y hora, correlaciones entre los llamados de emergencia al 123 y los delitos, y comparar antes y después de intervenciones.
+
+Con base en lo anterior, se define la organización en donde aplicar el proyecto: el Observatorio Local de Seguridad y Convivencia de Bogotá (OLSC-Bogotá), cuyo objetivo es ordenar, documentar y analizar fuentes de información ya existentes, articular sus clasificaciones y generar productos de inteligencia aplicada. Entre estos productos se incluyen informes ejecutivos mensuales, seguimiento a las modalidades delictivas en Bogotá, e identificación de señales de demanda ciudadana provenientes de la línea 123, con el fin de alimentar los comités locales de seguridad. La unidad de análisis prioritaria es la UPZ, lo cual se alinea con la estructura de planeación urbana del Distrito y los planes de acción zonales.
+
+%==============================================================================
+\section{Problema}
+%==============================================================================
+
+En la organización seleccionada, existe un flujo de trabajo compuesto de cuatro etapas:
+
+\begin{enumerate}[label=\roman*.]
+    \item Adición y estandarización de datos (incluyendo fechas, territorios, categorías y dominios)
+    \item Modelado relacional y dimensional con adición de variables temporales y espaciales
+    \item Análisis exploratorio para la evaluación de completitud, consistencia y patrones de los datos
+    \item Difusión de resultados mediante paneles interactivos y boletines de alerta.
+\end{enumerate}
+
+Este proceso y los análisis que realizan tienen como usuarios destino a coordinadores y analistas de seguridad zonales, así como actores académicos o comunitarios que necesiten soluciones que sean medibles y comparables en el tiempo y en el espacio. Adicionalmente, la función que realiza el OLSC en colaboración con las entidades gubernamentales es la de recopilar sus datos y utilizarlos para liderar soluciones en la gestión de la seguridad y las emergencias.
+
+Teniendo en cuenta todo lo mencionado, se detectan ciertas necesidades de la organización:
+
+\begin{itemize}
+    \item Integración de fuentes específicas y dispersas para relacionar los incidentes reportados y recopilados en bases de datos con lo que se registra como delito.
+    \item Visualizaciones funcionales con múltiples filtros específicos tanto por UPZ, franjas horarias y mapas.
+    \item Reportes formales para análisis por juntas de acción comunal y para el seguimiento de las intervenciones pertinentes.
+\end{itemize}
+
+\section{Objetivos del proyecto}
+
+\subsection{Objetivo general}
+
+Desarrollar un sistema de análisis y visualización de datos sobre hurtos a personas en Bogotá para apoyar la toma de decisiones estratégicas en el ámbito de seguridad en la ciudad.
+
+\subsection{Objetivos específicos}
+
+\begin{enumerate}
+    \item Recopilar, limpiar y modelar conjuntos de datos provenientes de diversas fuentes (Datos Abiertos Bogotá, NUSE 123).
+    \item Desarrollar indicadores clave para analizar patrones temporales, diferencias entre territorios y relaciones entre los delitos y las solicitudes de las personas.
+    \item Crear dashboards interactivos que permitan visualizar la información con filtros ajustables y mapas a nivel de UPZ.
+\end{enumerate}
+
+\section{Objetivos de analítica y visualización}
+
+\begin{enumerate}
+    \item \textbf{Prioridad de zonas por UPZ:} Identificar la concentración de la demanda ciudadana ante emergencias por UPZ, y contrastarla con el comportamiento del hurto a nivel urbano para orientar la asignación de recursos.
+    \item \textbf{Ritmos semanales y franjas horarias:} Analizar la distribución de incidentes atendidos por la línea de emergencias según día de la semana y franjas horarias, e identificar en el registro oficial de hurtos los momentos en que conviene reforzar vigilancia y patrullaje. 
+    \item \textbf{Tendencia temporal:} Desarrollar series temporales de la incidencia del hurto y de la demanda ante la línea de emergencias para identificar evolución, estacionalidad y posibles puntos de cambio. 
+    \item \textbf{Evaluación de intervenciones:} Comparar indicadores de incidencia y de demanda ciudadana en periodos de fechas antes y después a intervenciones de seguridad, reales o simuladas. 
+    \item \textbf{Relación demanda ciudadana y registro oficial:} Explorar la relación entre la demanda ante la línea de emergencias y el comportamiento del hurto registrado, e identificar en qué zonas esa relación es más evidente.
+\end{enumerate}
+
+%==============================================================================
+\section{Preguntas generadoras}
+%==============================================================================
+
+\begin{enumerate}
+    \item ¿En qué UPZ se concentran los eventos de inseguridad de manera crítica, y cuáles deberían priorizarse para la asignación de recursos gubernamentales?
+    \item ¿Cuáles son los días de la semana y las franjas horarias donde se concentran los diferentes tipos de delito, y en qué momentos críticos conviene reforzar los recursos de vigilancia y patrullaje?
+    \item ¿Cómo ha evolucionado la incidencia de cada tipo de delito en Bogotá, y cuáles han sido los cambios de tendencia que permiten evaluar el impacto de intervenciones futuras?
+    \item ¿Las intervenciones de seguridad implementadas (reales o simuladas) han generado una reducción significativa en los indicadores clave como densidad delictiva, tasa por 100 mil habitantes o índice de franjas horarias críticas?
+    \item ¿En qué categorías de delito y en qué UPZ la demanda ciudadana registrada a través de la línea 123 anticipa el comportamiento de los delitos formalmente denunciados?
+\end{enumerate}
+
+%==============================================================================
+\section{Conjuntos de datos y proceso de preparación}
+%==============================================================================
+
+\subsection{Descripción de las fuentes}
+
+El primer dataset utilizado corresponde a los registros de hurtos en Bogotá durante el año 2025. Este conjunto de datos contiene información detallada sobre los eventos de hurto, incluyendo variables como la fecha del hecho, el género de la víctima, el grupo etario, el tipo de arma o medio utilizado, el departamento, el municipio, el código DANE y la cantidad de casos reportados. Este dataset es fundamental para el proyecto, ya que permite analizar la dinámica de la criminalidad en la ciudad, identificar patrones temporales y segmentar los incidentes según características demográficas y contextuales.
+
+Los conjuntos de datos utilizados están disponibles en las siguientes fuentes:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item Estadística delictiva (Policía Nacional de Colombia): \url{https://www.policia.gov.co/estadistica-delictiva}
+    \item Delito de Alto Impacto (Datos Abiertos Bogotá): \url{https://datosabiertos.bogota.gov.co/dataset/delito-de-alto-impacto-bogota-d-c}
+    \item Incidentes tramitados en el C4 -- NUSE (Datos Abiertos Bogotá): \url{https://datosabiertos.bogota.gov.co/dataset/incidentes/resource/30d65a8b-d0ed-4e95-977e-0d7cc2ea89ef}
+\end{itemize}
+
+El segundo dataset corresponde a las llamadas realizadas a la línea de emergencias 123 (C4). Este conjunto de datos incluye información sobre los incidentes reportados por la ciudadanía, tales como el tipo de evento, la fecha y hora de la llamada, la ubicación y en algunos casos una descripción del suceso. Este dataset aporta una perspectiva complementaria al análisis, ya que permite estudiar la percepción ciudadana de seguridad y contrastar con los registros oficiales de hurtos, facilitando la identificación de posibles diferencias entre los eventos reportados y los registrados.
+
+El tercer dataset corresponde a la División Administrativa de Bogotá a nivel de Unidades de Planeamiento Zonal (UPZ). Contiene la delimitación espacial de cada UPZ, identificadores de zona y variables de apoyo para tasas y densidad. Su principal utilidad es georreferenciar la demanda ante la línea de emergencias y construir mapas por UPZ. En cambio, el registro de hurtos de la Policía, en la versión utilizada, se analiza a nivel urbano y no se cruza territorialmente con esta capa.
+
+\subsection{Preparación y limpieza de datos}
+
+El proceso de preparación se ejecutó con \textbf{Python} (\texttt{pandas}, \texttt{geopandas}) mediante el script \texttt{clean\_datasets.py}, que automatiza la depuración de las fuentes principales. Como salida se generaron las tablas de hechos \texttt{hurtos\_bogota\_2025.csv} y \texttt{Llamadas123C4.csv}, la capa geográfica \texttt{DAIUPZ.geojson} y los catálogos de dimensión \texttt{Calendar.csv}, \texttt{Localidad.csv}, \texttt{Genero.csv}, \texttt{ArmaMedio.csv} y \texttt{FranjaHoraria.csv} para el modelo de datos y las visualizaciones interactivas. Todos los archivos tabulares comparten separador de campo punto y coma (\texttt{;}) y codificación UTF-8.
+
+\subsubsection{Hurtos a personas (\texttt{hurtos\_bogota\_2025.csv})}
+
+La fuente original correspondía a un archivo CSV de la Policía Nacional con codificación \texttt{latin-1}, fechas en formato \texttt{d/m/aaaa} y separador \texttt{;}. Durante la revisión se identificó que el código DANE es único para todo el archivo (\texttt{11001000}, municipio de Bogotá), por lo que la geografía del hurto queda a \textbf{nivel urbano} y no por UPZ.
+
+Las transformaciones aplicadas fueron:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item Conversión a UTF-8 y normalización de nombres de columnas.
+    \item Parseo de \texttt{fecha\_hecho} a formato ISO (\texttt{YYYY-MM-DD}) y creación de variables temporales (\texttt{anio}, \texttt{mes}, \texttt{dia\_semana}, \texttt{nombre\_dia}).
+    \item Limpieza de categorías (\texttt{genero}, \texttt{agrupa\_edad}, \texttt{armas\_medios}): recorte de espacios y reemplazo de vacíos por \texttt{SIN\_DATO}.
+    \item Campo \texttt{nivel\_geografico} = \texttt{municipio}.
+    \item Agregación de registros repetidos por combinación de fecha, perfil de víctima y arma o medio, sumando el campo \texttt{cantidad}, con el fin de conservar el total de casos y reducir redundancia para las visualizaciones.
+\end{itemize}
+
+\textbf{Resultado:} de 100\,017 filas en origen a 3\,982 filas limpias. La suma de \texttt{cantidad} se mantiene en 100\,017. No se descartaron fechas inválidas.
+
+\subsubsection{Incidentes línea 123 / C4 (\texttt{Llamadas123C4.csv})}
+
+El recurso de Datos Abiertos Bogotá se entregó en JSON (estructura \texttt{fields} + \texttt{records}). Se transformó a CSV para su integración en el modelo de datos y consumo en Python. Entre los hallazgos de calidad destacan: coordenadas con coma decimal, códigos sentinela de localización (\texttt{UPZ999}, \texttt{UPZ99x}), registros con latitud/longitud en cero y duplicados por \texttt{id\_incidente}.
+
+Las transformaciones aplicadas fueron:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item Aplanado del JSON a tabla y estandarización de nombres de columnas.
+    \item Fecha en ISO y coordenadas numéricas con punto decimal.
+    \item Normalización de \texttt{cod\_upz} (mayúsculas) y de textos (\texttt{nombre\_dia}, \texttt{localidad}).
+    \item Variables de control: \texttt{sin\_localizacion}, \texttt{coord\_valida} y \texttt{upz\_valida} (validación contra el catálogo de UPZ y un bounding box aproximado de Bogotá).
+    \item Eliminación de duplicados por \texttt{id\_incidente}, conservando el registro con mejor georreferenciación.
+    \item Supresión del archivo JSON original tras generar el CSV depurado.
+\end{itemize}
+
+\textbf{Resultado:} de 33\,298 filas en origen a 30\,431 filas (2\,867 duplicados eliminados). Aproximadamente el 10,7\,\% de los registros quedó marcado como \texttt{sin\_localizacion}. Además, 27\,181 cuentan con coordenadas válidas y 27\,182 con UPZ válida frente al catálogo espacial. El periodo cubre los años 2020 a 2025.
+
+\subsubsection{División UPZ (\texttt{DAIUPZ.geojson})}
+
+El archivo administrativo se recibió en formato TopoJSON. Se convirtió a \textbf{GeoJSON} en referencia \texttt{EPSG:4326} para mapas interactivos con Python, conservando únicamente atributos analíticos: \texttt{objectid}, \texttt{cod\_upz}, \texttt{nombre\_upz}, \texttt{poblacion\_proxy} (derivado de \texttt{CMHPTOTAL}) y \texttt{area\_km2} (cálculo en \texttt{EPSG:9377}). Se exportaron 116 polígonos. El archivo TopoJSON original se eliminó tras la conversión.
+
+\subsubsection{Tablas de dimensión}
+
+Para soportar un esquema tipo estrella en el análisis y las visualizaciones, se generaron catálogos independientes, alineados con el modelo de referencia del curso:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item \texttt{Calendar.csv}: calendario continuo del 1 de enero de 2020 al 31 de diciembre de 2025 (2\,192 días, hora \texttt{00:00:00}).
+    \item \texttt{Localidad.csv}: códigos y nombres de localidad de Bogotá (incluye categorías especiales como \texttt{SIN LOCALIZACION}).
+    \item \texttt{Genero.csv} y \texttt{ArmaMedio.csv}: dominios de género y arma o medio para relacionar con hurtos.
+    \item \texttt{FranjaHoraria.csv}: ocho franjas horarias y su periodo del día (\texttt{MAÑANA}, \texttt{TARDE}, \texttt{NOCHE}, \texttt{MADRUGADA}).
+\end{itemize}
+
+\subsubsection{Control de calidad}
+
+\begin{table}[H]
+  \centering
+  \caption{Resumen de control de calidad tras la limpieza.}
+  \label{tab:qc-datasets}
+  \small
+  \begin{tabularx}{\linewidth}{lXX}
+    \toprule
+    \textbf{Conjunto} & \textbf{Registros finales} & \textbf{Observación principal} \\
+    \midrule
+    Hurtos 2025 & 3\,982 (100\,017 casos) & Solo nivel municipio, sin franja horaria \\
+    Llamadas 123 & 30\,431 & Georreferenciación por UPZ y muestra homogénea en tipo de incidente \\
+    UPZ (GeoJSON) & 116 polígonos & Población proxy, no censo oficial 2025 \\
+    Calendario & 2\,192 fechas & Cobertura 2020--2025 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{Integración de los conjuntos de datos}
+
+La integración se plantea como un \textbf{modelo estrella}. Las tablas de hechos son \texttt{hurtos\_bogota\_2025} (registro oficial agregado) y \texttt{Llamadas123C4} (demanda ciudadana georreferenciada). La dimensión espacial principal es \texttt{DAIUPZ.geojson}, relacionada con las llamadas mediante \texttt{cod\_upz}. Las dimensiones \texttt{Calendar}, \texttt{Localidad}, \texttt{FranjaHoraria}, \texttt{Genero} y \texttt{ArmaMedio} unifican dominios temporales, territoriales y categóricos.
+
+Las relaciones activas son:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item \texttt{Calendar[Date]} con \texttt{fecha\_hecho} y con \texttt{fecha} (llamadas).
+    \item \texttt{Genero} y \texttt{ArmaMedio} con la tabla de hurtos.
+    \item \texttt{Localidad} y \texttt{DAIUPZ} con la tabla de llamadas (\texttt{cod\_localidad}, \texttt{cod\_upz}).
+    \item \texttt{FranjaHoraria} con \texttt{rango\_hora} en llamadas.
+\end{itemize}
+
+%==============================================================================
+\section{Modelo lógico de datos final}
+%==============================================================================
+
+\subsection{Cambios respecto a la primera entrega}
+
+Tras el trabajo de integración, limpieza y alineación con los objetivos de analítica del OLSC-Bogotá, el modelo evolucionó desde un esquema en copo de nieve de cuatro tablas (\texttt{HECHOS\_HURTO}, \texttt{LLAMADAS\_123}, \texttt{UBICACION} y \texttt{UPZ}) hacia un \textbf{esquema estrella} para análisis y visualización. Los cambios principales son los siguientes:
+
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item \textbf{Adopción de un esquema estrella.} Se separaron explícitamente tablas de hechos y dimensiones, en lugar de normalizar la geografía en una cadena \texttt{UBICACION} $\rightarrow$ \texttt{UPZ} compartida por ambos hechos mediante \texttt{codigo\_dane}.
+    \item \textbf{Eliminación de la entidad \texttt{UBICACION}.} La revisión de las fuentes mostró que el registro de hurtos de la Policía trae un único código DANE municipal (\texttt{11001000}). Este código no permite desagregar por UPZ ni localidad. Por ello se abandonó la hipótesis de un cruce territorial común vía \texttt{codigo\_dane} y se documentó \texttt{nivel\_geografico = municipio} en la tabla de hurtos.
+    \item \textbf{Dimensión temporal unificada (\texttt{calendar}).} Las fechas de hurtos, llamadas e intervenciones dejaron de almacenarse solo como atributos en las tablas de hechos y pasan a relacionarse con una tabla calendario continua (2020--2025, 2\,192 días), habilitando series temporales y comparaciones antes/después.
+    \item \textbf{Normalización de dominios categóricos.} Se crearon las dimensiones \texttt{genero}, \texttt{arma\_medio}, \texttt{localidad} y \texttt{franja\_horaria}, con catálogos exportados desde el script de limpieza, en lugar de repetir textos libres en cada hecho.
+    \item \textbf{Georreferenciación diferenciada por fuente.} Las llamadas al 123 se vinculan a \texttt{localidad} y \texttt{upz} mediante \texttt{cod\_localidad} y \texttt{cod\_upz}. La dimensión \texttt{upz} incorpora \texttt{poblacion\_proxy} y \texttt{area\_km2} para tasas y densidad. Los hurtos conservan atributos departamento/municipio/código DANE sin relación activa a UPZ.
+    \item \textbf{Enriquecimiento de la tabla de llamadas.} Además de tipo y fecha, se incluyeron franja horaria, barrio, coordenadas, dirección, agencia y banderas de calidad (\texttt{sin\_localizacion}, \texttt{coord\_valida}, \texttt{upz\_valida}). Asimismo, la clave primaria pasó a ser \texttt{id\_incidente} (identificador oficial del C4).
+    \item \textbf{Agregación controlada de hurtos.} La tabla \texttt{hurtos\_bogota\_2025} agrupa por fecha, perfil de víctima y arma/medio, sumando \texttt{cantidad} para reducir volumen sin perder el total de 100\,017 casos.
+    \item \textbf{Soporte a evaluación de intervenciones.} Se añadieron \texttt{intervencion} (ventanas de fechas y alcance \texttt{UPZ} o \texttt{CIUDAD}) y la tabla puente \texttt{intervencion\_upz}, ausentes en la primera entrega, para el objetivo de analítica 4.
+    \item \textbf{Ajuste de nombres y convenciones.} Las entidades se renombraron en minúsculas y alineadas con los CSV procesados (\texttt{hurtos\_bogota\_2025}, \texttt{llamadas\_123}). El diagrama del modelo documenta el diseño final.
+\end{itemize}
+
+\subsection{Descripción del modelo}
+
+El modelo lógico final integra registros oficiales de hurtos, demanda ciudadana ante la línea 123 e intervenciones de seguridad (reales o simuladas), bajo un \textbf{esquema estrella}. La Figura~\ref{fig:modelo-datos} resume las entidades, atributos y relaciones del diseño.
+
+\subsubsection{Tablas de hechos}
+
+\textbf{\texttt{hurtos\_bogota\_2025}} almacena el registro oficial de hurtos a personas en Bogotá (año 2025, agregado). Cada fila representa un grano definido por fecha del hecho, género, grupo etario y arma o medio, con \texttt{cantidad} como medida sumable. Incluye descriptores temporales derivados (\texttt{anio}, \texttt{mes}, \texttt{dia\_semana}, \texttt{nombre\_dia}) y atributos geográficos a nivel \textbf{municipio} (\texttt{departamento}, \texttt{municipio}, \texttt{codigo\_dane}, \texttt{nivel\_geografico}). Se relaciona con \texttt{calendar}, \texttt{genero} y \texttt{arma\_medio}. \textbf{No} tiene relación con \texttt{upz} ni \texttt{localidad}, dado que la fuente policial no desagrega por zona de planeamiento.
+
+\textbf{\texttt{llamadas\_123}} registra incidentes tramitados en el C4 (NUSE), periodo 2020--2025. La clave es \texttt{id\_incidente}. Contiene tipo y descripción del incidente, circunstancia, localidad, UPZ, barrio, coordenadas, dirección y agencia, además de indicadores de calidad de georreferenciación. Se relaciona con \texttt{calendar}, \texttt{localidad}, \texttt{upz} y \texttt{franja\_horaria}. Constituye la base para mapas, tasas por UPZ y análisis de ritmos semanales y horarios.
+
+\subsubsection{Dimensiones y tablas de apoyo}
+
+\textbf{\texttt{calendar}} es la dimensión de tiempo compartida. Todas las fechas de hechos e intervenciones referencian \texttt{fecha} como clave.
+
+\textbf{\texttt{upz}} describe las 116 Unidades de Planeamiento Zonal: \texttt{cod\_upz}, \texttt{nombre\_upz}, \texttt{objectid}, \texttt{poblacion\_proxy} y \texttt{area\_km2} (geometría en \texttt{DAIUPZ.geojson} para mapas interactivos en las visualizaciones).
+
+\textbf{\texttt{localidad}} cataloga las localidades de Bogotá (\texttt{cod\_localidad}, \texttt{localidad}), incluyendo categorías especiales de registros sin ubicación precisa.
+
+\textbf{\texttt{genero}} y \textbf{\texttt{arma\_medio}} normalizan los dominios del dataset policial. \textbf{\texttt{franja\_horaria}} define ocho rangos horarios y su periodo del día (\texttt{rango\_del\_dia}).
+
+\textbf{\texttt{intervencion}} documenta programas o acciones de seguridad con \texttt{fecha\_inicio}, \texttt{fecha\_fin} (opcional), \texttt{alcance} (\texttt{UPZ} o \texttt{CIUDAD}) y descripción. \textbf{\texttt{intervencion\_upz}} es la tabla puente que asocia una intervención con una o varias UPZ cuando el alcance es zonal. Si el alcance es ciudad, el análisis se apoya en \texttt{calendar} sin usar el puente.
+
+\subsubsection{Relaciones e integración analítica}
+
+Las relaciones activas en el modelo siguen el patrón muchos-a-uno desde hechos hacia dimensiones. El cruce entre demanda ciudadana (llamadas por UPZ) y hurto oficial se realiza principalmente por \textbf{tiempo} (\texttt{calendar}) y, en exploración, por comparación de indicadores urbanos frente a patrones zonal de llamadas---no por una clave territorial común.
+
+Las intervenciones se evalúan contrastando indicadores antes y después del periodo definido. A nivel \texttt{CIUDAD}, se contrastan hurtos y llamadas vía calendario. A nivel \texttt{UPZ}, se filtran llamadas (y, cuando aplique, indicadores derivados) mediante \texttt{intervencion\_upz}.
+
+Este diseño responde a las preguntas generadoras del proyecto (priorización por UPZ, franjas críticas, tendencias, evaluación de intervenciones y relación 123--registro oficial) manteniendo trazabilidad entre las capacidades reales de cada fuente y lo que se presenta en las visualizaciones.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=16cm]{modelo-datos-vdd.png}
+  \caption{Modelo lógico de datos del proyecto.}
+  \label{fig:modelo-datos}
+\end{figure}
+
+%==============================================================================
+\section{Reporte Ejecutivo}
+%==============================================================================
+
+El presente reporte ejecutivo tiene como propósito analizar el comportamiento de la seguridad en Bogotá a partir de información relacionada con hurtos a personas y llamadas realizadas a la línea de emergencias 123. Mediante el uso de visualizaciones interactivas y análisis estadístico, se identifican patrones territoriales, temporales y operativos que permiten comprender las dinámicas de incidencia delictiva y la respuesta ciudadana frente a situaciones de inseguridad.
+
+Las visualizaciones interactivas se desarrollaron con \textbf{Python}, utilizando \texttt{pandas} para la integración de datos y \texttt{Plotly} para gráficos y mapas con filtros dinámicos. Cada vista correspondiente a un objetivo de analítica se exportó como archivo \textbf{HTML} autónomo, de modo que puede abrirse en cualquier navegador sin depender de software propietario. Las tasas por 100\,000 habitantes y la densidad se calculan en el script de visualización a partir de \texttt{poblacion\_proxy} y \texttt{area\_km2}.
+
+A lo largo del informe se presentan indicadores clave, zonas prioritarias, tendencias temporales y relaciones entre variables de seguridad, con el fin de apoyar la toma de decisiones y la formulación de estrategias orientadas al fortalecimiento de la prevención, vigilancia y asignación eficiente de recursos en la ciudad. Las visualizaciones desarrolladas permiten transformar grandes volúmenes de datos en información clara y útil para el análisis estratégico de la seguridad urbana.
+
+\subsection{Pantallas por objetivo de analítica}
+
+\subsubsection{Objetivo 1: Prioridad de zonas por UPZ}
+
+La visualización presenta un análisis territorial de la demanda ciudadana relacionada con seguridad en Bogotá, mostrando las UPZ con mayor número de llamadas registradas a la línea 123 durante 2025. A través de indicadores clave y un ranking comparativo, se identifican zonas prioritarias como El Rincón, Tibabuyes y Bosa Central, las cuales concentran los niveles más altos de reportes ciudadanos. Además, el panel resume variables estratégicas como el total de hurtos a personas, la cantidad de UPZ analizadas y la zona con mayor incidencia. Esta información permite reconocer áreas críticas para la focalización de recursos, fortalecimiento del patrullaje y diseño de estrategias preventivas orientadas a mejorar la seguridad urbana.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{pantalla1.png}
+  \caption{Prioridad de zonas por UPZ: demanda ciudadana en la línea 123 (2025).}
+  \label{fig:objetivo-1}
+\end{figure}
+
+\subsubsection{Objetivo 2: Ritmos semanales y franjas horarias}
+
+Esta visualización analiza los ritmos semanales y las franjas horarias con mayor incidencia de reportes ciudadanos relacionados con seguridad. Mediante un mapa de calor y gráficos comparativos, se identifican los momentos críticos en los que se concentra la mayor demanda a la línea 123, destacándose principalmente las horas del mediodía y la tarde, así como los días jueves, viernes y sábado. El panel permite reconocer patrones temporales en el comportamiento de los incidentes, facilitando la planificación de operativos, la asignación eficiente de recursos y el fortalecimiento de la vigilancia en los horarios de mayor riesgo para la ciudadanía.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{pantalla2.png}
+  \caption{Ritmos semanales y franjas horarias de la demanda en la línea 123.}
+  \label{fig:objetivo-2}
+\end{figure}
+
+\subsubsection{Objetivo 3: Tendencia temporal}
+
+La tercera visualización presenta la tendencia temporal de los hurtos y de las llamadas realizadas a la línea 123, permitiendo analizar la evolución de los incidentes a lo largo del tiempo. A través de series mensuales y anuales, el panel evidencia los períodos con mayor concentración de casos, destacando incrementos importantes durante determinados meses de 2025 y el comportamiento histórico de las llamadas de emergencia entre 2020 y 2025. Esta información facilita la identificación de patrones de crecimiento, estacionalidad y cambios en la dinámica de seguridad de la ciudad, apoyando la toma de decisiones estratégicas y la planeación de intervenciones preventivas.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{pantalla3.png}
+  \caption{Tendencia temporal de hurtos y llamadas a la línea 123.}
+  \label{fig:objetivo-3}
+\end{figure}
+
+\subsubsection{Objetivo 4: Evaluación de intervenciones}
+
+La cuarta visualización está orientada a la evaluación de intervenciones de seguridad mediante la comparación de indicadores antes y después de una fecha de intervención simulada. El panel muestra variaciones en el promedio mensual de hurtos o llamadas a la línea 123, permitiendo medir el posible impacto de las estrategias implementadas. A través de gráficos comparativos y métricas de variación porcentual, la visualización facilita el análisis de efectividad de las acciones de seguridad y proporciona una base para ajustar operativos, fortalecer recursos institucionales y optimizar futuras intervenciones en las zonas priorizadas.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{pantalla4.png}
+  \caption{Evaluación de intervenciones: comparación antes y después.}
+  \label{fig:objetivo-4}
+\end{figure}
+
+\subsubsection{Objetivo 5: Relación demanda ciudadana y registro oficial}
+
+La quinta visualización analiza la relación entre las llamadas realizadas a la línea 123 y los hurtos registrados en Bogotá, permitiendo identificar cómo la percepción y respuesta ciudadana se relaciona con el comportamiento de la criminalidad. A través de gráficos de correlación, distribución por localidad y caracterización de los hurtos, el panel evidencia que existe una relación positiva entre el aumento de incidentes y el incremento de reportes ciudadanos. Además, se destacan localidades como Suba, Kennedy y Engativá por concentrar una alta demanda de atención y mayores niveles de incidencia. La visualización también permite observar características relevantes de las víctimas y de los medios utilizados en el hurto, proporcionando una visión integral para apoyar estrategias de prevención y control.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{pantalla5.png}
+  \caption{Relación entre llamadas a la línea 123 y hurtos registrados.}
+  \label{fig:objetivo-5}
+\end{figure}
+
+\subsection{Filtros dinámicos}
+
+Cada pantalla del tablero incorpora filtros dinámicos propios que permiten segmentar el análisis sin modificar la estructura del modelo de datos. A continuación se documentan, en el mismo orden de los objetivos de analítica, los controles disponibles en cada vista y el botón \textbf{Reiniciar} para restablecer la selección.
+
+\subsubsection{Pantalla 1: Prioridad de zonas por UPZ}
+
+El filtro \textbf{Métrica} alterna entre el conteo absoluto de llamadas (\texttt{Llamadas (total)}) y la tasa relativa por cada 100\,000 habitantes (\texttt{Tasa por 100k hab.}), apoyada en \texttt{poblacion\_proxy} de la dimensión UPZ. Esto permite comparar zonas con distinto tamaño poblacional sin depender solo del volumen bruto de reportes.
+
+\subsubsection{Pantalla 2: Ritmos semanales y franjas horarias}
+
+El filtro \textbf{Rango del día} restringe los incidentes de la línea 123 según el periodo del día definido en la dimensión \texttt{franja\_horaria}: \texttt{Madrugada}, \texttt{Mañana}, \texttt{Tarde}, \texttt{Noche} o \texttt{Todos}. Complementa el mapa de calor y los gráficos de ritmo semanal al aislar franjas críticas para la planeación operativa.
+
+\subsubsection{Pantalla 3: Tendencia temporal}
+
+La pantalla combina dos controles. El filtro \textbf{Serie} permite visualizar \texttt{Ambas} fuentes a la vez, \texttt{Solo hurtos} (registro oficial de la Policía) o \texttt{Solo llamadas} (demanda ciudadana en la línea 123), de modo que las gráficas muestren una o ambas series según el análisis requerido.
+
+El filtro \textbf{Granularidad} define la escala temporal de las series. \texttt{Mensual 2025} agrega los hurtos mes a mes durante 2025 y contrasta el comportamiento reciente de las llamadas en esa misma ventana. Por su parte, \texttt{Anual 2020--25} resume la evolución año a año de las llamadas entre 2020 y 2025, útil para identificar tendencias de largo plazo y estacionalidad histórica de la demanda ciudadana.
+
+\subsubsection{Pantalla 4: Evaluación de intervenciones}
+
+El filtro \textbf{Fecha intervención} fija el mes de corte para la comparación antes/después de una intervención simulada, con opciones como \texttt{May 2025}, \texttt{Jun 2025} y \texttt{Jul 2025}. Al cambiar la fecha, el panel recalcula los promedios y la variación porcentual de los periodos previos y posteriores al mes seleccionado.
+
+El filtro \textbf{Indicador} define qué serie se evalúa en esa comparación: \texttt{Hurtos} (incidencia del registro oficial) o \texttt{Llamadas 123} (demanda atendida por el C4). Así se puede estimar el posible efecto de una intervención sobre la criminalidad registrada o sobre la percepción y reporte ciudadano, según la fuente de interés.
+
+\subsubsection{Pantalla 5: Relación demanda ciudadana y registro oficial}
+
+El filtro \textbf{Desglose} cambia la perspectiva del análisis integrado: \texttt{Por mes} (evolución temporal), \texttt{Por arma/medio} (caracterización del hurto) o \texttt{Por localidad} (contraste territorial entre demanda 123 e incidencia). Facilita explorar la correlación y las diferencias entre percepción ciudadana y registro oficial según el corte elegido.
+
+%==============================================================================
+\section{Conclusiones y recomendaciones}
+%==============================================================================
+
+\subsection{Conclusiones}
+
+En conclusión, el análisis desarrollado permitió identificar patrones territoriales, temporales y operativos relacionados con la seguridad en Bogotá y el comportamiento de los hurtos a personas. Los resultados evidencian que ciertas localidades y UPZ concentran mayores niveles de incidentes y demanda ciudadana, especialmente en sectores como Suba, Kennedy y Engativá, lo que resalta la necesidad de focalizar recursos y estrategias de vigilancia en estas zonas.
+
+Asimismo, se observó que los horarios de mayor incidencia se presentan principalmente entre el mediodía y la tarde, mientras que los días jueves, viernes y sábado registran los mayores niveles de actividad delictiva. Esto permite establecer criterios más eficientes para la planeación operativa y el despliegue de patrullaje preventivo.
+
+En conjunto, las visualizaciones facilitan una comprensión integral de los datos y aportan información valiosa para el diseño de políticas públicas y estrategias de intervención urbana basadas en evidencia.
+
+\subsection{Recomendaciones}
+
+Con base en los hallazgos del análisis y en las capacidades del modelo de datos construido, se proponen las siguientes recomendaciones para el OLSC-Bogotá y los actores de seguridad local:
+
+\begin{enumerate}
+    \item \textbf{Priorización territorial basada en tasas, no solo en volumen.} Las UPZ El Rincón, Tibabuyes y Bosa Central concentran la mayor demanda ciudadana en la línea 123 durante 2025. Sin embargo, la comparación mediante tasa por cada 100\,000 habitantes (filtro de la Pantalla~1) evita sobreestimar zonas muy pobladas. Se recomienda que los comités locales de seguridad utilicen ambos indicadores---conteo absoluto y tasa relativa---para definir planes de acción zonal y asignar patrullaje preventivo.
+    \item \textbf{Refuerzo operativo en franjas y días críticos.} Los ritmos semanales y horarios evidencian mayor actividad entre el mediodía y la tarde, y en los días jueves, viernes y sábado. Las agencias de seguridad deberían concentrar operativos, puntos de control y presencia visible en esas ventanas, complementando el monitoreo nocturno tradicional con acciones en horas diurnas de alta demanda.
+    \item \textbf{Integración sistemática de la línea 123 con el registro oficial.} La relación positiva entre llamadas y hurtos, junto con la concentración en localidades como Suba, Kennedy y Engativá, sugiere que la demanda ciudadana puede complementar la estadística policial para anticipar presión delictiva. Se recomienda establecer tableros periódicos que contrasten ambas fuentes por mes y por localidad, documentando desfases temporales y diferencias de cobertura geográfica.
+    \item \textbf{Protocolo de evaluación antes/después de intervenciones.} La Pantalla~4 demuestra la utilidad de comparar promedios mensuales de hurtos o llamadas alrededor de una fecha de corte. El OLSC debería adoptar este esquema para intervenciones reales: registrar en la tabla \texttt{intervencion} la ventana temporal, el alcance (\texttt{UPZ} o \texttt{CIUDAD}) y las UPZ afectadas mediante \texttt{intervencion\_upz}, de modo que cada acción quede trazable y evaluable con criterios homogéneos.
+    \item \textbf{Mejora de la calidad y completitud de los datos territoriales.} Aproximadamente el 10,7\,\% de las llamadas al 123 quedó sin localización válida y el registro de hurtos de la Policía no desagrega por UPZ. Se recomienda coordinar con Datos Abiertos Bogotá y la Policía Nacional la estandarización de códigos UPZ en incidentes policiales y la reducción de registros con coordenadas inválidas o códigos sentinela (\texttt{UPZ999}), condición necesaria para cruces territoriales más precisos.
+    \item \textbf{Actualización periódica del pipeline analítico.} El script inicial y las visualizaciones permiten reproducir el flujo de limpieza, modelado y difusión. Se sugiere calendarizar su ejecución mensual al publicarse nuevas versiones de las fuentes, incorporando boletines de alerta cuando una UPZ supere umbrales de tasa o densidad definidos por el observatorio.
+    \item \textbf{Difusión orientada a usuarios no técnicos.} Los tableros interactivos con filtros dinámicos y botón \textbf{Reiniciar} facilitan la exploración por coordinadores zonales y juntas de acción comunal. Se recomienda complementarlos con fichas ejecutivas breves (ranking de UPZ, franja horaria crítica y variación mensual) que no requieran manipular el archivo HTML, reforzando la función de inteligencia aplicada del OLSC.
+\end{enumerate}
+
+%==============================================================================
+\section{Lecciones aprendidas}
+%==============================================================================
+
+El desarrollo de este proyecto permitió reflexionar sobre el ciclo completo de un sistema de visualización aplicado a seguridad ciudadana, desde la comprensión del contexto institucional hasta la entrega de productos analíticos utilizables.
+
+\paragraph{Proceso técnico y modelado de datos.}
+Una lección central fue \textbf{adaptar el diseño del modelo a las capacidades reales de cada fuente}, y no forzar integraciones que los datos no soportan. La hipótesis inicial de un cruce territorial común mediante \texttt{codigo\_dane} resultó inviable al confirmarse que el registro de hurtos opera solo a nivel municipio. Por ello, el paso de un esquema en copo de nieve a un \textbf{esquema estrella} con dimensiones explícitas (\texttt{calendar}, \texttt{upz}, \texttt{franja\_horaria}, entre otras) simplificó las consultas, los filtros de las visualizaciones y la trazabilidad de cada indicador.
+
+\paragraph{Visualización y analítica.}
+La elección de \textbf{Plotly} y archivos HTML autónomos demostró ser adecuada para usuarios del OLSC que no dependen de licencias propietarias: cada objetivo de analítica quedó encapsulado en una pantalla con filtros acotados (métrica, rango del día, serie, granularidad, fecha de intervención e indicador), lo que facilita la exploración sin alterar el modelo subyacente. Se aprendió que \textbf{un mismo conjunto de datos responde mejor a preguntas distintas cuando las vistas están diseñadas con un grano analítico claro} en lugar de concentrar todo en un único dashboard sobrecargado.
+
+\paragraph{Limitaciones del estudio.}
+El análisis reconoce restricciones que condicionan la interpretación de los resultados. El hurto oficial carece de desagregación por UPZ y de franja horaria. La población utilizada es un \texttt{poblacion\_proxy} y no el censo oficial de 2025. Las llamadas al 123 cubren un periodo más amplio (2020--2025) que los hurtos (2025). Además, la muestra de incidentes del C4 presenta homogeneidad en el tipo de evento, lo que limita comparaciones finas entre modalidades delictivas. Estas limitaciones no invalidan los patrones identificados, pero exigen \textbf{explicitar el nivel geográfico y temporal} de cada conclusión al comunicarla a actores de política pública.
+
+\paragraph{Trabajo en equipo y trabajo futuro.}
+La coordinación entre recopilación de fuentes, modelado, limpieza y diseño de pantallas evidenció la necesidad de acordar convenciones tempranas (separador \texttt{;}, UTF-8, nombres de tablas en minúsculas) para evitar retrabajo. También la comunicación entre miembros del equipo fue crucial para poder completar con todos los componentes de la entrega final del proyecto, así como con la consolidación tanto de los documentos como de las visualizaciones en sí. Como líneas futuras se identifican cuatro acciones. Incorporar hurtos desagregados por localidad o UPZ cuando estén disponibles. Enriquecer la dimensión \texttt{intervencion} con intervenciones reales documentadas por la Secretaría de Seguridad. Ampliar el análisis a otras modalidades de alto impacto. Explorar técnicas de detección de puntos de cambio en las series temporales para automatizar alertas tempranas en el observatorio.
+
+%==============================================================================
+\section{Anexos}
+%==============================================================================
+
+Los archivos anexos de la entrega final se organizan en tres componentes: conjuntos de datos, modelo lógico y visualizador interactivo.
+
+\subsection{Anexo A: Conjuntos de datos (\texttt{DATASETS/})}
+
+\textbf{\texttt{DATASETS/data/}}
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item \texttt{hurtos\_bogota\_2025.csv}
+    \item \texttt{Llamadas123C4.csv}
+    \item \texttt{DAIUPZ.geojson}
+\end{itemize}
+
+\textbf{\texttt{DATASETS/nuevas-tablas/}}
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item \texttt{Calendar.csv}
+    \item \texttt{Localidad.csv}
+    \item \texttt{Genero.csv}
+    \item \texttt{ArmaMedio.csv}
+    \item \texttt{FranjaHoraria.csv}
+\end{itemize}
+
+\textbf{\texttt{DATASETS/scripts/}}
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item \texttt{clean\_datasets.py}
+\end{itemize}
+
+\subsection{Anexo B: Modelo lógico de datos}
+
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item \texttt{modelo-datos-vdd.png}
+\end{itemize}
+
+\subsection{Anexo C: Visualizador interactivo}
+
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item \texttt{dashboard\_seguridad\_bogota.html}
+\end{itemize}
+
+\subsection{Repositorio del proyecto}
+
+Todos los archivos anteriores se encuentran en el siguiente repositorio y en el archivo zip adjunto:
+
+\begin{itemize}[noitemsep, topsep=0pt]
+  \item \url{https://github.com/luisfgutierrezr/proyecto-VDD.git}
+  \item \texttt{proyecto-VDD.zip}
+\end{itemize}
+
+\addcontentsline{toc}{section}{Referencias}
+\begin{thebibliography}{99}
+\raggedright
+
+\bibitem{cisc2025} 
+Cisc. (2025). \textit{Estadística delictiva / Policía Nacional de Colombia}. Policía Nacional De Colombia. \url{https://www.policia.gov.co/estadistica-delictiva}
+
+\bibitem{datosbog_altoimpacto}
+\textit{Delito de Alto Impacto. Bogotá D.C. - Datos Abiertos Bogotá}. (s.f.). \url{https://datosabiertos.bogota.gov.co/dataset/delito-de-alto-impacto-bogota-d-c}
+
+\bibitem{datosbog_nuse}
+\textit{Incidentes Tramitados en el C4 - Numero Único de Seguridad y Emergencia. NUSE. Bogotá D.C. - Datos Abiertos Bogotá}. (s.f.). \url{https://datosabiertos.bogota.gov.co/dataset/incidentes/resource/30d65a8b-d0ed-4e95-977e-0d7cc2ea89ef}
+
+\bibitem{alcaldia2024}
+Alcaldía de Bogotá. (2024). \textit{En Bogotá, mi Ciudad, mi Casa contamos con el C4 para la seguridad y emergencias}. Bogota.gov.co. \url{https://bogota.gov.co/mi-ciudad/seguridad/en-bogota-mi-ciudad-mi-casa-contamos-con-el-c4-para-la-seguridad}
+
+\bibitem{minjusticia}
+Ministerio de Justicia y del Derecho. (s.f.). \url{https://www.minjusticia.gov.co/programas-co/politica-criminal/Paginas/SIPC-Tasa-de-Homicidios-Basada-en-reporte-de-homicidios-de-la-Policia-Nacional.aspx}
+
+\end{thebibliography}
+
+\end{document}
